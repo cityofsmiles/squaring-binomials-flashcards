@@ -47,7 +47,8 @@ export default function App() {
     try {
       const userExpr = simplify(parse(preprocessInput(userInput)));
       const correctExpr = simplify(parse(correct.toLowerCase()));
-      return simplify(userExpr.subtract(correctExpr)).equals(0);
+      const diff = simplify(userExpr.subtract(correctExpr));
+      return diff.toString() === "0"; // robust equivalence check
     } catch {
       return false;
     }
@@ -167,7 +168,5 @@ export default function App() {
     </div>
   );
 }
-
-
 
 
