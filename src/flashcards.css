@@ -1,0 +1,168 @@
+/* --- Global Reset --- */
+body {
+  margin: 0;
+  font-family: "Inter", Arial, sans-serif;
+  background: #f9fafb;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* --- Main Container --- */
+.flashcards-container {
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  margin: auto;
+}
+
+/* --- Titles --- */
+.flashcards-container h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.flashcards-container h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #555;
+}
+
+.flashcards-container h3 {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+/* --- Flashcard Box --- */
+.flashcard-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.flashcard {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+  min-width: 280px;
+  max-width: 90%;
+  word-wrap: break-word;
+  text-align: center;
+}
+
+/* --- Input --- */
+.input-answer {
+  width: 80%;
+  max-width: 350px;
+  padding: 0.7rem;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  font-size: 1rem;
+  margin: 1rem 0;
+  outline: none;
+  text-align: center;
+  transition: border 0.2s;
+}
+
+.input-answer:focus {
+  border-color: #2563eb;
+}
+
+/* --- Buttons --- */
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.btn-submit {
+  background: #10b981;
+  color: white;
+}
+
+.btn-submit:hover {
+  background: #059669;
+  transform: scale(1.05);
+}
+
+/* --- Answer Key Screen --- */
+.answer-key-screen {
+  text-align: left;
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.answer-key-screen h2 {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.answer-key-screen .score {
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.answer-key p {
+  background: #f3f4f6;
+  padding: 0.6rem;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.answer-key strong {
+  color: #111827;
+}
+
+.score {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #1a73e8;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.correct {
+  color: green;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
+.incorrect {
+  color: red;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}

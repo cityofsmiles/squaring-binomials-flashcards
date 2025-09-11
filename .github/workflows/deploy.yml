@@ -1,0 +1,47 @@
+name: Deploy Flashcards App
+
+on:
+  push:
+    branches:
+      - main  # adjust if your default branch is different
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # --- Python step to generate flashcards.json ---
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          pip install sympy
+
+      - name: Generate flashcards.json
+        run: python generate_flashcards.py
+
+      # --- Node step to build frontend ---
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20  # ✅ upgraded for Vite 7
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build React project
+        run: npm run build
+
+      # --- Deploy ---
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
