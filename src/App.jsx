@@ -36,15 +36,21 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // Preprocess student input
+  // --- Preprocess input: lowercase, normalize spacing, insert multiplication ---
   const preprocessInput = (ans) => {
     let fixed = ans;
 
-    // Normalize case first
+    // Force lowercase
     fixed = fixed.toLowerCase();
 
-    // Convert "x2" into "x^2"
+    // Convert things like "x2" into "x^2"
     fixed = fixed.replace(/([a-z])(\d)/g, "$1^$2");
+
+    // Insert * between consecutive letters (xp -> x*p)
+    fixed = fixed.replace(/([a-z])([a-z])/g, "$1*$2");
+
+    // Insert * between number and variable if missing (2x -> 2*x)
+    fixed = fixed.replace(/(\d)([a-z])/g, "$1*$2");
 
     // Remove spaces
     fixed = fixed.replace(/\s+/g, "");
@@ -52,7 +58,7 @@ export default function App() {
     return fixed;
   };
 
-  // Check equivalence using mathjs, with fallback
+  // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
       const userExpr = simplify(parse(preprocessInput(userInput)));
@@ -61,7 +67,7 @@ export default function App() {
 
       return diff.isZero?.() || diff.toString() === "0";
     } catch {
-      // fallback: compare normalized strings directly
+      // fallback: normalized string comparison
       return preprocessInput(userInput) === preprocessInput(correct);
     }
   };
@@ -95,9 +101,7 @@ export default function App() {
 
         <div className="answer-key">
           {flashcards.map((card, i) => {
-            const userRaw = answers[i] || "(none)";
-            const correct = checkAnswer(userRaw, card.answer);
-
+            const correct = checkAnswer(answers[i] || "", card.answer);
             return (
               <motion.div
                 key={i}
@@ -108,18 +112,12 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {userRaw}{" "}
+                  Your Answer: {answers[i] || "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  {correct ? (
-                    <span>
-                      Equivalent to: {card.answer}
-                    </span>
-                  ) : (
-                    <span>Correct Answer: {card.answer}</span>
-                  )}
+                  Correct Answer: {card.answer}
                 </p>
               </motion.div>
             );
