@@ -10,7 +10,7 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize input for fair comparison
+  // Normalize input for mathjs comparison
   const normalizeAnswer = (ans) => {
     return ans.replace(/\s+/g, "").toLowerCase();
   };
