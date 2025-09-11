@@ -36,11 +36,15 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
+  // --- Normalize answers for case-insensitive comparison ---
+  const normalizeAnswer = (ans) =>
+    ans.replace(/\s+/g, "").toLowerCase();
+
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(userInput));
-      const correctExpr = simplify(parse(correct));
+      const userExpr = simplify(parse(normalizeAnswer(userInput)));
+      const correctExpr = simplify(parse(normalizeAnswer(correct)));
       return simplify(userExpr.subtract(correctExpr)).equals(0);
     } catch {
       return false; // invalid input
