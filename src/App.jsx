@@ -36,9 +36,19 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // --- Normalize answers for case-insensitive comparison ---
+  // --- Normalize answers for flexible comparison ---
   const normalizeAnswer = (ans) =>
-    ans.replace(/\s+/g, "").toLowerCase();
+    ans.replace(/\s+/g, "").toLowerCase(); // remove ALL spaces, lowercase
+
+  // --- Pretty-print normalized student answer for display ---
+  const prettyAnswer = (ans) => {
+    try {
+      if (!ans.trim()) return "(none)";
+      return simplify(parse(normalizeAnswer(ans))).toString();
+    } catch {
+      return ans; // fallback: show as typed
+    }
+  };
 
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
@@ -91,7 +101,7 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {answers[i] || "(none)"}{" "}
+                  Your Answer: {prettyAnswer(answers[i] || "")}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
