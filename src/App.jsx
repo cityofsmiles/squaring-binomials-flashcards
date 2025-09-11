@@ -10,16 +10,27 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize input for mathjs comparison
-  const normalizeAnswer = (ans) => {
-    return ans.replace(/\s+/g, "").toLowerCase();
+  // Preprocess student input for comparison
+  const preprocessInput = (ans) => {
+    let fixed = ans;
+
+    // Convert things like "x2" into "x^2"
+    fixed = fixed.replace(/([a-zA-Z])(\d)/g, "$1^$2");
+
+    // Remove spaces
+    fixed = fixed.replace(/\s+/g, "");
+
+    // Force all variables to lowercase
+    fixed = fixed.toLowerCase();
+
+    return fixed;
   };
 
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(normalizeAnswer(userInput)));
-      const correctExpr = simplify(parse(normalizeAnswer(correct)));
+      const userExpr = simplify(parse(preprocessInput(userInput)));
+      const correctExpr = simplify(parse(preprocessInput(correct)));
       const diff = simplify(userExpr.subtract(correctExpr));
       return diff.isZero?.() || diff.toString() === "0";
     } catch {
