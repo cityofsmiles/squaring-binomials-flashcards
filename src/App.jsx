@@ -40,10 +40,10 @@ export default function App() {
   const preprocessInput = (ans) => {
     let fixed = ans;
 
-    // Normalize case first (B -> b, X -> x, etc.)
+    // Normalize case first
     fixed = fixed.toLowerCase();
 
-    // Convert things like "x2" into "x^2"
+    // Convert "x2" into "x^2"
     fixed = fixed.replace(/([a-z])(\d)/g, "$1^$2");
 
     // Remove spaces
@@ -52,15 +52,17 @@ export default function App() {
     return fixed;
   };
 
-  // Check equivalence using mathjs
+  // Check equivalence using mathjs, with fallback
   const checkAnswer = (userInput, correct) => {
     try {
       const userExpr = simplify(parse(preprocessInput(userInput)));
       const correctExpr = simplify(parse(preprocessInput(correct)));
       const diff = simplify(userExpr.subtract(correctExpr));
+
       return diff.isZero?.() || diff.toString() === "0";
     } catch {
-      return false;
+      // fallback: compare normalized strings directly
+      return preprocessInput(userInput) === preprocessInput(correct);
     }
   };
 
