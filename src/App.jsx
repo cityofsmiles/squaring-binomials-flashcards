@@ -39,9 +39,16 @@ export default function App() {
   // Preprocess student input
   const preprocessInput = (ans) => {
     let fixed = ans;
-    fixed = fixed.replace(/([a-zA-Z])(\d)/g, "$1^$2"); // turn x2 into x^2
-    fixed = fixed.replace(/\s+/g, ""); // remove spaces
-    fixed = fixed.toLowerCase(); // normalize case
+
+    // Normalize case first (B -> b, X -> x, etc.)
+    fixed = fixed.toLowerCase();
+
+    // Convert things like "x2" into "x^2"
+    fixed = fixed.replace(/([a-z])(\d)/g, "$1^$2");
+
+    // Remove spaces
+    fixed = fixed.replace(/\s+/g, "");
+
     return fixed;
   };
 
