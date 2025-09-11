@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { simplify, parse } from "mathjs"; // for algebraic equivalence
+import { simplify, parse } from "mathjs";
 import "./flashcards.css";
 
 export default function App() {
@@ -9,34 +9,6 @@ export default function App() {
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Preprocess student input for comparison
-  const preprocessInput = (ans) => {
-    let fixed = ans;
-
-    // Convert things like "x2" into "x^2"
-    fixed = fixed.replace(/([a-zA-Z])(\d)/g, "$1^$2");
-
-    // Remove spaces
-    fixed = fixed.replace(/\s+/g, "");
-
-    // Force all variables to lowercase
-    fixed = fixed.toLowerCase();
-
-    return fixed;
-  };
-
-  // --- Check equivalence using mathjs ---
-  const checkAnswer = (userInput, correct) => {
-    try {
-      const userExpr = simplify(parse(preprocessInput(userInput)));
-      const correctExpr = simplify(parse(preprocessInput(correct)));
-      const diff = simplify(userExpr.subtract(correctExpr));
-      return diff.isZero?.() || diff.toString() === "0";
-    } catch {
-      return false; // invalid input
-    }
-  };
 
   // Load flashcards JSON (works locally + GitHub Pages)
   const loadFlashcards = () => {
@@ -63,6 +35,27 @@ export default function App() {
 
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
+
+  // Preprocess student input
+  const preprocessInput = (ans) => {
+    let fixed = ans;
+    fixed = fixed.replace(/([a-zA-Z])(\d)/g, "$1^$2"); // turn x2 into x^2
+    fixed = fixed.replace(/\s+/g, ""); // remove spaces
+    fixed = fixed.toLowerCase(); // normalize case
+    return fixed;
+  };
+
+  // Check equivalence using mathjs
+  const checkAnswer = (userInput, correct) => {
+    try {
+      const userExpr = simplify(parse(preprocessInput(userInput)));
+      const correctExpr = simplify(parse(preprocessInput(correct)));
+      const diff = simplify(userExpr.subtract(correctExpr));
+      return diff.isZero?.() || diff.toString() === "0";
+    } catch {
+      return false;
+    }
+  };
 
   const nextCard = () =>
     setCurrentIndex((prev) =>
@@ -93,7 +86,9 @@ export default function App() {
 
         <div className="answer-key">
           {flashcards.map((card, i) => {
-            const correct = checkAnswer(answers[i] || "", card.answer);
+            const userRaw = answers[i] || "(none)";
+            const correct = checkAnswer(userRaw, card.answer);
+
             return (
               <motion.div
                 key={i}
@@ -104,12 +99,18 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {answers[i] || "(none)"}{" "}
+                  Your Answer: {userRaw}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  Correct Answer: {card.answer}
+                  {correct ? (
+                    <span>
+                      Equivalent to: {card.answer}
+                    </span>
+                  ) : (
+                    <span>Correct Answer: {card.answer}</span>
+                  )}
                 </p>
               </motion.div>
             );
