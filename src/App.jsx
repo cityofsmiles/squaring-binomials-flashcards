@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { simplify, parse } from "mathjs";
+import { simplify, parse } from "mathjs"; // for algebraic equivalence
 import "./flashcards.css";
 
 export default function App() {
@@ -10,6 +10,7 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Load flashcards JSON (works locally + GitHub Pages)
   const loadFlashcards = () => {
     const base =
       import.meta.env.MODE === "development"
@@ -32,32 +33,38 @@ export default function App() {
     loadFlashcards();
   }, []);
 
-  const handleAnswer = (value) => setAnswers({ ...answers, [currentIndex]: value });
+  const handleAnswer = (value) =>
+    setAnswers({ ...answers, [currentIndex]: value });
 
+  // --- Preprocess user input ---
   const preprocessInput = (input) => {
-    let cleaned = input
+    return input
       .toLowerCase()
-      .replace(/\s+/g, "") // remove all spaces first
-      .replace(/([a-zA-Z])([a-zA-Z])/g, "$1*$2") // insert * between consecutive vars
-      .replace(/(\d)([a-zA-Z])/g, "$1*$2"); // insert * between number and var
-    return cleaned;
+      .replace(/\s+/g, "") // remove all spaces
+      .replace(/([a-z])([a-z])/g, "$1*$2") // insert * between consecutive letters
+      .replace(/(\d)([a-z])/g, "$1*$2") // insert * between number and variable
+      .replace(/([a-z])(\d)/g, "$1*$2"); // insert * between variable and number
   };
 
+  // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
       const userExpr = simplify(parse(preprocessInput(userInput)));
-      const correctExpr = simplify(parse(correct.toLowerCase()));
+      const correctExpr = simplify(parse(preprocessInput(correct)));
       const diff = simplify(userExpr.subtract(correctExpr));
-      return diff.toString() === "0"; // robust equivalence check
+      return diff.equals(0);
     } catch {
-      return false;
+      return false; // invalid input
     }
   };
 
   const nextCard = () =>
-    setCurrentIndex((prev) => (prev === flashcards.length - 1 ? prev : prev + 1));
+    setCurrentIndex((prev) =>
+      prev === flashcards.length - 1 ? prev : prev + 1
+    );
 
-  const prevCard = () => setCurrentIndex((prev) => (prev === 0 ? prev : prev - 1));
+  const prevCard = () =>
+    setCurrentIndex((prev) => (prev === 0 ? prev : prev - 1));
 
   if (loading) return <p>Loading flashcards...</p>;
 
