@@ -10,6 +10,23 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Normalize input for fair comparison
+  const normalizeAnswer = (ans) => {
+    return ans.replace(/\s+/g, "").toLowerCase();
+  };
+
+  // --- Check equivalence using mathjs ---
+  const checkAnswer = (userInput, correct) => {
+    try {
+      const userExpr = simplify(parse(normalizeAnswer(userInput)));
+      const correctExpr = simplify(parse(normalizeAnswer(correct)));
+      const diff = simplify(userExpr.subtract(correctExpr));
+      return diff.isZero?.() || diff.toString() === "0";
+    } catch {
+      return false; // invalid input
+    }
+  };
+
   // Load flashcards JSON (works locally + GitHub Pages)
   const loadFlashcards = () => {
     const base =
@@ -35,31 +52,6 @@ export default function App() {
 
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
-
-  // --- Normalize answers for flexible comparison ---
-  const normalizeAnswer = (ans) =>
-    ans.replace(/\s+/g, "").toLowerCase(); // remove ALL spaces, lowercase
-
-  // --- Pretty-print normalized student answer for display ---
-  const prettyAnswer = (ans) => {
-    try {
-      if (!ans.trim()) return "(none)";
-      return simplify(parse(normalizeAnswer(ans))).toString();
-    } catch {
-      return ans; // fallback: show as typed
-    }
-  };
-
-  // --- Check equivalence using mathjs ---
-  const checkAnswer = (userInput, correct) => {
-    try {
-      const userExpr = simplify(parse(normalizeAnswer(userInput)));
-      const correctExpr = simplify(parse(normalizeAnswer(correct)));
-      return simplify(userExpr.subtract(correctExpr)).equals(0);
-    } catch {
-      return false; // invalid input
-    }
-  };
 
   const nextCard = () =>
     setCurrentIndex((prev) =>
@@ -101,7 +93,7 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {prettyAnswer(answers[i] || "")}{" "}
+                  Your Answer: {answers[i] || "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
