@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -36,22 +37,25 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // --- Preprocess user input ---
+  // --- Normalize user input (handle ^, *, uppercase, spaces) ---
   const preprocessInput = (input) => {
     return input
-      .toLowerCase()
       .replace(/\s+/g, "") // remove all spaces
-      .replace(/([a-zA-Z])([a-zA-Z])/g, "$1*$2") // insert * between consecutive letters
+      .replace(/\^/g, "**") // convert ^ to **
+      .replace(/([a-zA-Z])([a-zA-Z])/g, "$1*$2") // insert * between adjacent variables
       .replace(/(\d)([a-zA-Z])/g, "$1*$2") // insert * between number and variable
-      .replace(/([a-zA-Z])(\d)/g, "$1*$2") // insert * between variable and number
-      .replace(/([a-zA-Z])(\^)/g, "$1$2"); // keep exponents intact
+      .replace(/([a-zA-Z])(\d)/g, "$1^$2"); // e.g., x2 → x^2
   };
 
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(preprocessInput(userInput.toLowerCase())));
-      const correctExpr = simplify(parse(preprocessInput(correct.toLowerCase())));
+      const userExpr = simplify(
+        parse(preprocessInput(userInput.toLowerCase()))
+      );
+      const correctExpr = simplify(
+        parse(preprocessInput(correct.toLowerCase()))
+      );
       const diff = simplify(userExpr.subtract(correctExpr));
       return diff.equals(0);
     } catch {
@@ -92,7 +96,9 @@ export default function App() {
             return (
               <motion.div
                 key={i}
-                className={`answer-item ${correct ? "correct-bg" : "incorrect-bg"}`}
+                className={`answer-item ${
+                  correct ? "correct-bg" : "incorrect-bg"
+                }`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.05 }}
@@ -159,7 +165,11 @@ export default function App() {
       />
 
       <div className="button-group">
-        <button className="btn-primary" onClick={prevCard} disabled={currentIndex === 0}>
+        <button
+          className="btn-primary"
+          onClick={prevCard}
+          disabled={currentIndex === 0}
+        >
           Previous
         </button>
         <button
@@ -176,5 +186,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
