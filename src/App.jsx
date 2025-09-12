@@ -9,7 +9,6 @@ import "./flashcards.css";
 const expandExpression = (expr) => {
   try {
     const node = parse(expr);
-    // Apply distributive rules
     const expanded = simplify(node, [
       { l: "n1*(n2+n3)", r: "n1*n2 + n1*n3" },
       { l: "(n1+n2)*n3", r: "n1*n3 + n2*n3" },
@@ -26,18 +25,18 @@ const formatAnswer = (expr) => {
     let raw = expr.toLowerCase().replace(/\s+/g, "");
     let s = simplify(expandExpression(raw)).toString();
 
-    // Remove * for cleaner output
+    // Remove *
     s = s.replace(/\*/g, "");
     // Add spacing
     s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
     s = s.replace(/\s+/g, " ").trim();
 
-    // Reorder terms (descending powers first)
+    // Reorder terms
     const terms = s.split(/ (?=\+|-)/);
     terms.sort((a, b) => {
       const getPower = (t) => {
         const match = t.match(/\^(\d+)/);
-        return match ? parseInt(match[1], 10) : (/[a-z]/.test(t) ? 1 : 0);
+        return match ? parseInt(match[1], 10) : /[a-z]/.test(t) ? 1 : 0;
       };
       return getPower(b) - getPower(a);
     });
@@ -45,21 +44,6 @@ const formatAnswer = (expr) => {
     return terms.join(" ");
   } catch {
     return expr;
-  }
-};
-
-// --- Check equivalence using expansion ---
-const checkAnswer = (userInput, correct) => {
-  try {
-    const u = simplify(
-      expandExpression(userInput.toLowerCase().replace(/\s+/g, ""))
-    );
-    const c = simplify(
-      expandExpression(correct.toLowerCase().replace(/\s+/g, ""))
-    );
-    return simplify(u.subtract(c)).equals(0);
-  } catch {
-    return false;
   }
 };
 
@@ -96,6 +80,17 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
+  // --- Check equivalence using canonical format ---
+  const checkAnswer = (userInput, correct) => {
+    try {
+      const u = formatAnswer(userInput);
+      const c = formatAnswer(correct);
+      return u === c;
+    } catch {
+      return false;
+    }
+  };
+
   const nextCard = () =>
     setCurrentIndex((prev) =>
       prev === flashcards.length - 1 ? prev : prev + 1
@@ -129,9 +124,7 @@ export default function App() {
             return (
               <motion.div
                 key={i}
-                className={`answer-item ${
-                  correct ? "correct-bg" : "incorrect-bg"
-                }`}
+                className={`answer-item ${correct ? "correct-bg" : "incorrect-bg"}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.05 }}
@@ -219,6 +212,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
