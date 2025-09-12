@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse, expand } from "mathjs"; // expand ensures no factoring
@@ -194,3 +196,5 @@ export default function App() {
     </div>
   );
 }
+
+
