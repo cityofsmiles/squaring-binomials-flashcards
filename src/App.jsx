@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -39,15 +37,24 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // --- Normalize user input (handle ^, *, uppercase, spaces) ---
+  // --- Normalize input ---
   const preprocessInput = (input) => {
     return input
-      .toLowerCase() // force everything to lowercase
-      .replace(/\s+/g, "") // remove all spaces
-      .replace(/\^/g, "**") // convert ^ to **
-      .replace(/([a-z])([a-z])/g, "$1*$2") // insert * between adjacent variables
-      .replace(/(\d)([a-z])/g, "$1*$2") // insert * between number and variable
-      .replace(/([a-z])(\d)/g, "$1^$2"); // e.g., x2 → x^2
+      .toLowerCase()
+      .replace(/\s+/g, "") // remove spaces
+      .replace(/\^/g, "**")
+      .replace(/([a-z])([a-z])/g, "$1*$2")
+      .replace(/(\d)([a-z])/g, "$1*$2")
+      .replace(/([a-z])(\d)/g, "$1^$2");
+  };
+
+  // --- Format answer for clean display ---
+  const formatAnswer = (expr) => {
+    try {
+      return simplify(parse(preprocessInput(expr))).toString();
+    } catch {
+      return expr; // fallback if parsing fails
+    }
   };
 
   // --- Check equivalence using mathjs ---
@@ -59,21 +66,6 @@ export default function App() {
       return diff.equals(0);
     } catch {
       return false; // invalid input
-    }
-  };
-
-  // --- Format correct answers for display (textbook style) ---
-  const formatAnswer = (expr) => {
-    try {
-      // Expand & simplify
-      const expanded = simplify(parse(preprocessInput(expr)));
-      // MathJS stringifies in canonical order
-      let formatted = expanded.toString();
-      // Replace ** with ^, remove * for readability
-      formatted = formatted.replace(/\*\*/g, "^").replace(/\*/g, "");
-      return formatted;
-    } catch {
-      return expr;
     }
   };
 
@@ -110,16 +102,15 @@ export default function App() {
             return (
               <motion.div
                 key={i}
-                className={`answer-item ${
-                  correct ? "correct-bg" : "incorrect-bg"
-                }`}
+                className={`answer-item ${correct ? "correct-bg" : "incorrect-bg"}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.05 }}
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {answers[i] || "(none)"}{" "}
+                  Your Answer:{" "}
+                  {answers[i] ? formatAnswer(answers[i]) : "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
@@ -179,11 +170,7 @@ export default function App() {
       />
 
       <div className="button-group">
-        <button
-          className="btn-primary"
-          onClick={prevCard}
-          disabled={currentIndex === 0}
-        >
+        <button className="btn-primary" onClick={prevCard} disabled={currentIndex === 0}>
           Previous
         </button>
         <button
@@ -200,4 +187,6 @@ export default function App() {
     </div>
   );
 }
+
+
 
