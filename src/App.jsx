@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -15,11 +16,15 @@ export default function App() {
   const formatAnswer = (expr) => {
     try {
       let s = simplify(parse(expr.toLowerCase().replace(/\s+/g, ""))).toString();
-      // Remove multiplication signs (e.g., "2*x" → "2x")
+      // Remove multiplication signs
       s = s.replace(/\*/g, "");
+      // Add spaces around + and - for readability
+      s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
+      // Fix double spaces
+      s = s.replace(/\s+/g, " ").trim();
       return s;
     } catch {
-      return expr; // return raw if invalid
+      return expr;
     }
   };
 
@@ -178,7 +183,6 @@ export default function App() {
     </div>
   );
 }
-
 
 
 
