@@ -2,8 +2,66 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { simplify, parse, expand } from "mathjs"; // expand ensures no factoring
+import { simplify, parse } from "mathjs";
 import "./flashcards.css";
+
+// --- Expansion helper (force distributive expansion) ---
+const expandExpression = (expr) => {
+  try {
+    const node = parse(expr);
+    // Apply distributive rules
+    const expanded = simplify(node, [
+      { l: "n1*(n2+n3)", r: "n1*n2 + n1*n3" },
+      { l: "(n1+n2)*n3", r: "n1*n3 + n2*n3" },
+    ]);
+    return expanded.toString();
+  } catch {
+    return expr;
+  }
+};
+
+// --- Normalize and pretty-print answers ---
+const formatAnswer = (expr) => {
+  try {
+    let raw = expr.toLowerCase().replace(/\s+/g, "");
+    let s = simplify(expandExpression(raw)).toString();
+
+    // Remove * for cleaner output
+    s = s.replace(/\*/g, "");
+    // Add spacing
+    s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
+    s = s.replace(/\s+/g, " ").trim();
+
+    // Reorder terms (descending powers first)
+    const terms = s.split(/ (?=\+|-)/);
+    terms.sort((a, b) => {
+      const getPower = (t) => {
+        const match = t.match(/\^(\d+)/);
+        return match ? parseInt(match[1], 10) : (/[a-z]/.test(t) ? 1 : 0);
+      };
+      return getPower(b) - getPower(a);
+    });
+
+    return terms.join(" ");
+  } catch {
+    return expr;
+  }
+};
+
+// --- Check equivalence using expansion ---
+const checkAnswer = (userInput, correct) => {
+  try {
+    const u = simplify(
+      expandExpression(userInput.toLowerCase().replace(/\s+/g, ""))
+    );
+    const c = simplify(
+      expandExpression(correct.toLowerCase().replace(/\s+/g, ""))
+    );
+    return simplify(u.subtract(c)).equals(0);
+  } catch {
+    return false;
+  }
+};
 
 export default function App() {
   const [flashcards, setFlashcards] = useState([]);
@@ -12,37 +70,7 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // --- Normalize and pretty-print answers ---
-  const formatAnswer = (expr) => {
-    try {
-      // Expand first, then simplify
-      let raw = expr.toLowerCase().replace(/\s+/g, "");
-      let s = simplify(expand(parse(raw))).toString();
-
-      // Remove multiplication symbols
-      s = s.replace(/\*/g, "");
-      // Add spacing around + and -
-      s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
-      // Clean multiple spaces
-      s = s.replace(/\s+/g, " ").trim();
-
-      // --- reorder terms: highest power first ---
-      const terms = s.split(/ (?=\+|-)/);
-      terms.sort((a, b) => {
-        const getPower = (t) => {
-          const match = t.match(/\^(\d+)/);
-          return match ? parseInt(match[1], 10) : (/[a-z]/.test(t) ? 1 : 0);
-        };
-        return getPower(b) - getPower(a);
-      });
-
-      return terms.join(" ");
-    } catch {
-      return expr;
-    }
-  };
-
-  // Load flashcards JSON (works locally + GitHub Pages)
+  // Load flashcards JSON
   const loadFlashcards = () => {
     const base =
       import.meta.env.MODE === "development"
@@ -67,17 +95,6 @@ export default function App() {
 
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
-
-  // --- Check equivalence using mathjs ---
-  const checkAnswer = (userInput, correct) => {
-    try {
-      const u = simplify(expand(parse(userInput.toLowerCase().replace(/\s+/g, ""))));
-      const c = simplify(expand(parse(correct.toLowerCase().replace(/\s+/g, ""))));
-      return simplify(u.subtract(c)).equals(0);
-    } catch {
-      return false; // invalid input
-    }
-  };
 
   const nextCard = () =>
     setCurrentIndex((prev) =>
@@ -112,14 +129,16 @@ export default function App() {
             return (
               <motion.div
                 key={i}
-                className={`answer-item ${correct ? "correct-bg" : "incorrect-bg"}`}
+                className={`answer-item ${
+                  correct ? "correct-bg" : "incorrect-bg"
+                }`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.05 }}
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {answers[i] ? formatAnswer(answers[i]) : "(none)"}{" "}
+                  Your Answer: {formatAnswer(answers[i] || "(none)")}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
@@ -179,7 +198,11 @@ export default function App() {
       />
 
       <div className="button-group">
-        <button className="btn-primary" onClick={prevCard} disabled={currentIndex === 0}>
+        <button
+          className="btn-primary"
+          onClick={prevCard}
+          disabled={currentIndex === 0}
+        >
           Previous
         </button>
         <button
@@ -196,5 +219,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
