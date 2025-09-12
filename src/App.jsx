@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -61,6 +62,21 @@ export default function App() {
     }
   };
 
+  // --- Format correct answers for display (textbook style) ---
+  const formatAnswer = (expr) => {
+    try {
+      // Expand & simplify
+      const expanded = simplify(parse(preprocessInput(expr)));
+      // MathJS stringifies in canonical order
+      let formatted = expanded.toString();
+      // Replace ** with ^, remove * for readability
+      formatted = formatted.replace(/\*\*/g, "^").replace(/\*/g, "");
+      return formatted;
+    } catch {
+      return expr;
+    }
+  };
+
   const nextCard = () =>
     setCurrentIndex((prev) =>
       prev === flashcards.length - 1 ? prev : prev + 1
@@ -108,7 +124,7 @@ export default function App() {
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  Correct Answer: {card.answer}
+                  Correct Answer: {formatAnswer(card.answer)}
                 </p>
               </motion.div>
             );
@@ -184,6 +200,4 @@ export default function App() {
     </div>
   );
 }
-
-
 
