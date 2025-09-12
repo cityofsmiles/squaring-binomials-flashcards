@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -40,22 +41,19 @@ export default function App() {
   // --- Normalize user input (handle ^, *, uppercase, spaces) ---
   const preprocessInput = (input) => {
     return input
+      .toLowerCase() // force everything to lowercase
       .replace(/\s+/g, "") // remove all spaces
       .replace(/\^/g, "**") // convert ^ to **
-      .replace(/([a-zA-Z])([a-zA-Z])/g, "$1*$2") // insert * between adjacent variables
-      .replace(/(\d)([a-zA-Z])/g, "$1*$2") // insert * between number and variable
-      .replace(/([a-zA-Z])(\d)/g, "$1^$2"); // e.g., x2 → x^2
+      .replace(/([a-z])([a-z])/g, "$1*$2") // insert * between adjacent variables
+      .replace(/(\d)([a-z])/g, "$1*$2") // insert * between number and variable
+      .replace(/([a-z])(\d)/g, "$1^$2"); // e.g., x2 → x^2
   };
 
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(
-        parse(preprocessInput(userInput.toLowerCase()))
-      );
-      const correctExpr = simplify(
-        parse(preprocessInput(correct.toLowerCase()))
-      );
+      const userExpr = simplify(parse(preprocessInput(userInput)));
+      const correctExpr = simplify(parse(preprocessInput(correct)));
       const diff = simplify(userExpr.subtract(correctExpr));
       return diff.equals(0);
     } catch {
