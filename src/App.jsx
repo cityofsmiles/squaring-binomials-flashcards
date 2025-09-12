@@ -1,6 +1,5 @@
 
 
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -12,6 +11,15 @@ export default function App() {
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // --- Normalize + simplify an expression ---
+  const formatAnswer = (expr) => {
+    try {
+      return simplify(parse(expr.toLowerCase().replace(/\s+/g, ""))).toString();
+    } catch {
+      return expr; // return raw if invalid
+    }
+  };
 
   // Load flashcards JSON (works locally + GitHub Pages)
   const loadFlashcards = () => {
@@ -36,24 +44,14 @@ export default function App() {
     loadFlashcards();
   }, []);
 
-  // --- Format answer for consistent display ---
-  const formatAnswer = (expr) => {
-    try {
-      return simplify(parse(expr.toLowerCase().replace(/\s+/g, ""))).toString();
-    } catch {
-      return expr;
-    }
-  };
-
-  // --- Save normalized answer ---
   const handleAnswer = (value) =>
-    setAnswers({ ...answers, [currentIndex]: formatAnswer(value) });
+    setAnswers({ ...answers, [currentIndex]: value });
 
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(userInput));
-      const correctExpr = simplify(parse(correct));
+      const userExpr = simplify(parse(userInput.toLowerCase().replace(/\s+/g, "")));
+      const correctExpr = simplify(parse(correct.toLowerCase().replace(/\s+/g, "")));
       return simplify(userExpr.subtract(correctExpr)).equals(0);
     } catch {
       return false; // invalid input
@@ -101,7 +99,7 @@ export default function App() {
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
                   Your Answer:{" "}
-                  {answers[i] ? answers[i] : "(none)"}{" "}
+                  {answers[i] ? formatAnswer(answers[i]) : "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
@@ -178,6 +176,5 @@ export default function App() {
     </div>
   );
 }
-
 
 
