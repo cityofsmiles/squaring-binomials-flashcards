@@ -1,3 +1,5 @@
+
+
 import sympy as sp
 import random
 import json
@@ -31,12 +33,16 @@ def format_term(coef, var=None, exp=1, hide_one=True):
     return f"{c_str}{var}^{exp}"
 
 
-def generate_case(case_type):
-    x = sp.Symbol(random.choice(vars_list))
-    y = sp.Symbol(random.choice([v for v in vars_list if v != str(x)]))
+def pick_vars():
+    """Pick two distinct variables, ordered alphabetically."""
+    v1, v2 = random.sample(vars_list, 2)
+    return tuple(sorted([v1, v2]))
 
+
+def generate_case(case_type):
     if case_type == 1:
         # (x ± b)^2
+        x = sp.Symbol(random.choice(vars_list))
         b = random.randint(1, 6)
         sign = random.choice([1, -1])
         expr = (x + sign * b) ** 2
@@ -44,14 +50,17 @@ def generate_case(case_type):
 
     elif case_type == 2:
         # (x ± by)^2
+        v1, v2 = pick_vars()
+        x = sp.Symbol(v1)
+        y = sp.Symbol(v2)
         b = random.randint(1, 6)
         sign = random.choice([1, -1])
-        term = format_term(sign * b, str(y), hide_one=True)
         expr = (x + sign * b * y) ** 2
         q = f"({x} {'+' if sign == 1 else '-'} {format_term(b, str(y), hide_one=True)})^2"
 
     elif case_type == 3:
         # (ax ± b)^2
+        x = sp.Symbol(random.choice(vars_list))
         a = random.randint(1, 3)
         b = random.randint(1, 6)
         sign = random.choice([1, -1])
@@ -60,6 +69,9 @@ def generate_case(case_type):
 
     else:  # case_type == 4
         # (ax ± by)^2
+        v1, v2 = pick_vars()
+        x = sp.Symbol(v1)
+        y = sp.Symbol(v2)
         a = random.randint(1, 3)
         b = random.randint(1, 6)
         sign = random.choice([1, -1])
@@ -83,3 +95,6 @@ with open(output_path, "w") as f:
     json.dump(flashcards, f, indent=2)
 
 print(f"✅ flashcards.json generated with {len(flashcards)} flashcards at {output_path}")
+
+
+ 

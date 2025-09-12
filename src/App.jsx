@@ -2,65 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { simplify, parse } from "mathjs";
+import { parse } from "mathjs";
 import "./flashcards.css";
-
-// --- Expansion helper (force distributive expansion) ---
-const expandExpression = (expr) => {
-  try {
-    const node = parse(expr);
-    const expanded = simplify(node, [
-      { l: "n1*(n2+n3)", r: "n1*n2 + n1*n3" },
-      { l: "(n1+n2)*n3", r: "n1*n3 + n2*n3" },
-    ]);
-    return expanded.toString();
-  } catch {
-    return expr;
-  }
-};
-
-// --- Normalize and pretty-print answers ---
-const formatAnswer = (expr) => {
-  try {
-    let raw = expr.toLowerCase().replace(/\s+/g, "");
-    let s = simplify(expandExpression(raw)).toString();
-
-    // Remove *
-    s = s.replace(/\*/g, "");
-    // Add spacing
-    s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
-    s = s.replace(/\s+/g, " ").trim();
-
-    // Split into terms
-    let terms = s.split(/ (?=\+|-)/).map((t) => t.trim());
-
-    // Normalize variable order inside each term (alphabetical order)
-    terms = terms.map((t) => {
-      return t.replace(/([a-z])([a-z])/gi, (match) =>
-        match.split("").sort().join("")
-      );
-    });
-
-    // Sort terms: higher power → alphabetical vars → constants last
-    terms.sort((a, b) => {
-      const power = (term) => {
-        const match = term.match(/\^(\d+)/);
-        return match ? parseInt(match[1], 10) : /[a-z]/.test(term) ? 1 : 0;
-      };
-      const pa = power(a);
-      const pb = power(b);
-      if (pa !== pb) return pb - pa;
-
-      const va = (a.match(/[a-z]+/) || [""])[0];
-      const vb = (b.match(/[a-z]+/) || [""])[0];
-      return va.localeCompare(vb);
-    });
-
-    return terms.join(" ");
-  } catch {
-    return expr;
-  }
-};
 
 export default function App() {
   const [flashcards, setFlashcards] = useState([]);
@@ -68,6 +11,20 @@ export default function App() {
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Normalize user input (remove spaces, lowercase, etc.)
+  const normalizeInput = (str) =>
+    str.replace(/\s+/g, "").toLowerCase();
+
+  // Expand expression into a consistent string
+  const expandExpression = (exprStr) => {
+    try {
+      const expr = parse(normalizeInput(exprStr));
+      return expr.expand().toString(); // mathjs expand node → string
+    } catch {
+      return null;
+    }
+  };
 
   // Load flashcards JSON
   const loadFlashcards = () => {
@@ -95,15 +52,11 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // --- Check equivalence using canonical format ---
-  const checkAnswer = (userInput, correct) => {
-    try {
-      const u = formatAnswer(userInput);
-      const c = formatAnswer(correct);
-      return u === c;
-    } catch {
-      return false;
-    }
+  // Compare by expansion only
+  const checkAnswer = (userInput, question) => {
+    const correctExpanded = expandExpression(question);
+    const userExpanded = expandExpression(userInput);
+    return userExpanded !== null && userExpanded === correctExpanded;
   };
 
   const nextCard = () =>
@@ -118,7 +71,7 @@ export default function App() {
 
   if (showResults) {
     const score = flashcards.filter((card, i) =>
-      checkAnswer(answers[i] || "", card.answer)
+      checkAnswer(answers[i] || "", card.question)
     ).length;
 
     return (
@@ -135,7 +88,9 @@ export default function App() {
 
         <div className="answer-key">
           {flashcards.map((card, i) => {
-            const correct = checkAnswer(answers[i] || "", card.answer);
+            const correct = checkAnswer(answers[i] || "", card.question);
+            const correctAnswer = expandExpression(card.question);
+            const userAnswer = expandExpression(answers[i] || "");
             return (
               <motion.div
                 key={i}
@@ -146,12 +101,12 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {formatAnswer(answers[i] || "(none)")}{" "}
+                  Your Answer: {userAnswer || "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  Correct Answer: {formatAnswer(card.answer)}
+                  Correct Answer: {correctAnswer}
                 </p>
               </motion.div>
             );
@@ -206,11 +161,7 @@ export default function App() {
       />
 
       <div className="button-group">
-        <button
-          className="btn-primary"
-          onClick={prevCard}
-          disabled={currentIndex === 0}
-        >
+        <button className="btn-primary" onClick={prevCard} disabled={currentIndex === 0}>
           Previous
         </button>
         <button
@@ -227,5 +178,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
