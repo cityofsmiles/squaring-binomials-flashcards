@@ -54,7 +54,7 @@ export default function App() {
     try {
       return simplify(parse(preprocessInput(expr))).toString();
     } catch {
-      return expr.toLowerCase().replace(/\s+/g, ""); // fallback: lowercase + no spaces
+      return expr.toLowerCase().replace(/\s+/g, ""); // fallback
     }
   };
 
@@ -188,7 +188,6 @@ export default function App() {
     </div>
   );
 }
-
 
 
 
