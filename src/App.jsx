@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -35,36 +36,25 @@ export default function App() {
     loadFlashcards();
   }, []);
 
-  const handleAnswer = (value) =>
-    setAnswers({ ...answers, [currentIndex]: value });
-
-  // --- Normalize input ---
-  const preprocessInput = (input) => {
-    return input
-      .toLowerCase()
-      .replace(/\s+/g, "") // remove spaces
-      .replace(/\^/g, "**")
-      .replace(/([a-z])([a-z])/g, "$1*$2")
-      .replace(/(\d)([a-z])/g, "$1*$2")
-      .replace(/([a-z])(\d)/g, "$1^$2");
-  };
-
-  // --- Format answer for clean display ---
+  // --- Format answer for consistent display ---
   const formatAnswer = (expr) => {
     try {
-      return simplify(parse(preprocessInput(expr))).toString();
+      return simplify(parse(expr.toLowerCase().replace(/\s+/g, ""))).toString();
     } catch {
-      return expr.toLowerCase().replace(/\s+/g, ""); // fallback
+      return expr;
     }
   };
+
+  // --- Save normalized answer ---
+  const handleAnswer = (value) =>
+    setAnswers({ ...answers, [currentIndex]: formatAnswer(value) });
 
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(preprocessInput(userInput)));
-      const correctExpr = simplify(parse(preprocessInput(correct)));
-      const diff = simplify(userExpr.subtract(correctExpr));
-      return diff.equals(0);
+      const userExpr = simplify(parse(userInput));
+      const correctExpr = simplify(parse(correct));
+      return simplify(userExpr.subtract(correctExpr)).equals(0);
     } catch {
       return false; // invalid input
     }
@@ -111,7 +101,7 @@ export default function App() {
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
                   Your Answer:{" "}
-                  {answers[i] ? formatAnswer(answers[i]) : "(none)"}{" "}
+                  {answers[i] ? answers[i] : "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
