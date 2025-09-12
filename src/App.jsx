@@ -50,8 +50,8 @@ export default function App() {
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(preprocessInput(userInput)));
-      const correctExpr = simplify(parse(preprocessInput(correct)));
+      const userExpr = simplify(parse(preprocessInput(userInput.toLowerCase())));
+      const correctExpr = simplify(parse(preprocessInput(correct.toLowerCase())));
       const diff = simplify(userExpr.subtract(correctExpr));
       return diff.equals(0);
     } catch {
