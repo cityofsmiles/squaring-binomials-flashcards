@@ -31,14 +31,29 @@ const formatAnswer = (expr) => {
     s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
     s = s.replace(/\s+/g, " ").trim();
 
-    // Reorder terms
-    const terms = s.split(/ (?=\+|-)/);
+    // Split into terms
+    let terms = s.split(/ (?=\+|-)/).map((t) => t.trim());
+
+    // Normalize variable order inside each term (alphabetical order)
+    terms = terms.map((t) => {
+      return t.replace(/([a-z])([a-z])/gi, (match) =>
+        match.split("").sort().join("")
+      );
+    });
+
+    // Sort terms: higher power → alphabetical vars → constants last
     terms.sort((a, b) => {
-      const getPower = (t) => {
-        const match = t.match(/\^(\d+)/);
-        return match ? parseInt(match[1], 10) : /[a-z]/.test(t) ? 1 : 0;
+      const power = (term) => {
+        const match = term.match(/\^(\d+)/);
+        return match ? parseInt(match[1], 10) : /[a-z]/.test(term) ? 1 : 0;
       };
-      return getPower(b) - getPower(a);
+      const pa = power(a);
+      const pb = power(b);
+      if (pa !== pb) return pb - pa;
+
+      const va = (a.match(/[a-z]+/) || [""])[0];
+      const vb = (b.match(/[a-z]+/) || [""])[0];
+      return va.localeCompare(vb);
     });
 
     return terms.join(" ");
@@ -212,7 +227,5 @@ export default function App() {
     </div>
   );
 }
-
-
 
 
