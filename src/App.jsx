@@ -41,9 +41,10 @@ export default function App() {
     return input
       .toLowerCase()
       .replace(/\s+/g, "") // remove all spaces
-      .replace(/([a-z])([a-z])/g, "$1*$2") // insert * between consecutive letters
-      .replace(/(\d)([a-z])/g, "$1*$2") // insert * between number and variable
-      .replace(/([a-z])(\d)/g, "$1*$2"); // insert * between variable and number
+      .replace(/([a-zA-Z])([a-zA-Z])/g, "$1*$2") // insert * between consecutive letters
+      .replace(/(\d)([a-zA-Z])/g, "$1*$2") // insert * between number and variable
+      .replace(/([a-zA-Z])(\d)/g, "$1*$2") // insert * between variable and number
+      .replace(/([a-zA-Z])(\^)/g, "$1$2"); // keep exponents intact
   };
 
   // --- Check equivalence using mathjs ---
