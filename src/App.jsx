@@ -1,8 +1,6 @@
-
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { simplify, parse } from "mathjs"; // for algebraic equivalence
+import { simplify, parse, expand } from "mathjs"; // expand ensures no factoring
 import "./flashcards.css";
 
 export default function App() {
@@ -15,9 +13,15 @@ export default function App() {
   // --- Normalize and pretty-print answers ---
   const formatAnswer = (expr) => {
     try {
-      let s = simplify(parse(expr.toLowerCase().replace(/\s+/g, ""))).toString();
-      s = s.replace(/\*/g, ""); // remove *
+      // Expand first, then simplify
+      let raw = expr.toLowerCase().replace(/\s+/g, "");
+      let s = simplify(expand(parse(raw))).toString();
+
+      // Remove multiplication symbols
+      s = s.replace(/\*/g, "");
+      // Add spacing around + and -
       s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
+      // Clean multiple spaces
       s = s.replace(/\s+/g, " ").trim();
 
       // --- reorder terms: highest power first ---
@@ -29,6 +33,7 @@ export default function App() {
         };
         return getPower(b) - getPower(a);
       });
+
       return terms.join(" ");
     } catch {
       return expr;
@@ -64,9 +69,9 @@ export default function App() {
   // --- Check equivalence using mathjs ---
   const checkAnswer = (userInput, correct) => {
     try {
-      const userExpr = simplify(parse(userInput.toLowerCase().replace(/\s+/g, "")));
-      const correctExpr = simplify(parse(correct.toLowerCase().replace(/\s+/g, "")));
-      return simplify(userExpr.subtract(correctExpr)).equals(0);
+      const u = simplify(expand(parse(userInput.toLowerCase().replace(/\s+/g, ""))));
+      const c = simplify(expand(parse(correct.toLowerCase().replace(/\s+/g, ""))));
+      return simplify(u.subtract(c)).equals(0);
     } catch {
       return false; // invalid input
     }
@@ -189,5 +194,3 @@ export default function App() {
     </div>
   );
 }
-
-
