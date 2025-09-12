@@ -12,17 +12,24 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // --- Normalize + simplify an expression ---
+  // --- Normalize and pretty-print answers ---
   const formatAnswer = (expr) => {
     try {
       let s = simplify(parse(expr.toLowerCase().replace(/\s+/g, ""))).toString();
-      // Remove multiplication signs
-      s = s.replace(/\*/g, "");
-      // Add spaces around + and - for readability
+      s = s.replace(/\*/g, ""); // remove *
       s = s.replace(/\+/g, " + ").replace(/-/g, " - ");
-      // Fix double spaces
       s = s.replace(/\s+/g, " ").trim();
-      return s;
+
+      // --- reorder terms: highest power first ---
+      const terms = s.split(/ (?=\+|-)/);
+      terms.sort((a, b) => {
+        const getPower = (t) => {
+          const match = t.match(/\^(\d+)/);
+          return match ? parseInt(match[1], 10) : (/[a-z]/.test(t) ? 1 : 0);
+        };
+        return getPower(b) - getPower(a);
+      });
+      return terms.join(" ");
     } catch {
       return expr;
     }
@@ -105,8 +112,7 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer:{" "}
-                  {answers[i] ? formatAnswer(answers[i]) : "(none)"}{" "}
+                  Your Answer: {answers[i] ? formatAnswer(answers[i]) : "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
@@ -183,6 +189,5 @@ export default function App() {
     </div>
   );
 }
-
 
 
