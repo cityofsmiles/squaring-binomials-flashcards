@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { simplify, parse } from "mathjs"; // for algebraic equivalence
@@ -53,7 +54,7 @@ export default function App() {
     try {
       return simplify(parse(preprocessInput(expr))).toString();
     } catch {
-      return expr; // fallback if parsing fails
+      return expr.toLowerCase().replace(/\s+/g, ""); // fallback: lowercase + no spaces
     }
   };
 
@@ -187,6 +188,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
