@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { parse } from "mathjs";
+import { simplify, parse } from "mathjs";
 import "./flashcards.css";
 
 export default function App() {
@@ -13,14 +13,21 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   // Normalize user input (remove spaces, lowercase, etc.)
-  const normalizeInput = (str) =>
-    str.replace(/\s+/g, "").toLowerCase();
+  const normalizeInput = (str) => str.replace(/\s+/g, "").toLowerCase();
 
-  // Expand expression into a consistent string
+  // Expand + simplify into canonical form for comparison
   const expandExpression = (exprStr) => {
     try {
       const expr = parse(normalizeInput(exprStr));
-      return expr.expand().toString(); // mathjs expand node → string
+      const expanded = simplify(expr, ["expand"]);
+      // Format nicely: remove "*" and enforce consistent spacing
+      return expanded
+        .toString()
+        .replace(/\*/g, "")
+        .replace(/\s*\+\s*/g, " + ")
+        .replace(/\s*-\s*/g, " - ")
+        .replace(/\s+/g, " ")
+        .trim();
     } catch {
       return null;
     }
@@ -52,7 +59,7 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // Compare by expansion only
+  // Compare canonical expanded forms
   const checkAnswer = (userInput, question) => {
     const correctExpanded = expandExpression(question);
     const userExpanded = expandExpression(userInput);
