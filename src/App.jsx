@@ -1,8 +1,8 @@
 
 
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { parse, simplify } from "mathjs";
 import "./flashcards.css";
 
 export default function App() {
@@ -12,9 +12,20 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize input (remove spaces, lowercase)
-  const normalizeInput = (str) =>
+  // Normalize user input (remove spaces, lowercase)
+  const normalize = (str) =>
     str.replace(/\s+/g, "").toLowerCase();
+
+  // Compare algebraically using math.js
+  const checkAnswer = (userInput, correctAnswer) => {
+    try {
+      const userExpr = simplify(parse(normalize(userInput)));
+      const correctExpr = simplify(parse(normalize(correctAnswer)));
+      return simplify(userExpr.subtract(correctExpr)).equals(0);
+    } catch {
+      return false; // invalid input
+    }
+  };
 
   // Load flashcards JSON
   const loadFlashcards = () => {
@@ -41,13 +52,6 @@ export default function App() {
 
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
-
-  // Compare user answer with correct answer from JSON
-  const checkAnswer = (userInput, correctAnswer) => {
-    const correct = normalizeInput(correctAnswer);
-    const user = normalizeInput(userInput);
-    return user !== "" && user === correct;
-  };
 
   const nextCard = () =>
     setCurrentIndex((prev) =>
@@ -79,11 +83,6 @@ export default function App() {
         <div className="answer-key">
           {flashcards.map((card, i) => {
             const correct = checkAnswer(answers[i] || "", card.answer);
-            const correctAnswer = card.answer;
-            const userAnswer =
-              answers[i] && answers[i].trim() !== ""
-                ? answers[i]
-                : "(none)";
             return (
               <motion.div
                 key={i}
@@ -94,12 +93,12 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {userAnswer}{" "}
+                  Your Answer: {answers[i] || "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  Correct Answer: {correctAnswer}
+                  Correct Answer: {card.answer}
                 </p>
               </motion.div>
             );
@@ -171,6 +170,4 @@ export default function App() {
     </div>
   );
 }
-
-
 
