@@ -1,7 +1,7 @@
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { parse, simplify } from "mathjs";
 import "./flashcards.css";
 
 export default function App() {
@@ -11,32 +11,13 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Expand + simplify into canonical form for comparison
-  const expandExpression = (exprStr) => {
-    try {
-      if (!exprStr || exprStr.trim() === "") return null;
-      // Normalize: lowercase, replace ^ with ** for mathjs
-      const normalized = exprStr
-        .replace(/\s+/g, "")
-        .toLowerCase()
-        .replace(/\^/g, "**");
+  // Normalize string: remove spaces, lowercase
+  const normalize = (str) =>
+    str.replace(/\s+/g, "").toLowerCase();
 
-      const expr = parse(normalized);
-
-      // Expand polynomial fully
-      const expanded = simplify(expr, {}, { exactFractions: false }).toString();
-
-      // Cleanup formatting: remove *, normalize spacing
-      return expanded
-        .replace(/\*/g, "")
-        .replace(/\s*\+\s*/g, " + ")
-        .replace(/\s*-\s*/g, " - ")
-        .replace(/\s+/g, " ")
-        .trim();
-    } catch (err) {
-      console.error("Parse error:", exprStr, err);
-      return null;
-    }
+  // Compare user input to stored answer key
+  const checkAnswer = (userInput, correctAnswer) => {
+    return normalize(userInput) === normalize(correctAnswer);
   };
 
   // Load flashcards JSON
@@ -65,13 +46,6 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // Compare by expansion only
-  const checkAnswer = (userInput, question) => {
-    const correctExpanded = expandExpression(question);
-    const userExpanded = expandExpression(userInput);
-    return userExpanded !== null && userExpanded === correctExpanded;
-  };
-
   const nextCard = () =>
     setCurrentIndex((prev) =>
       prev === flashcards.length - 1 ? prev : prev + 1
@@ -84,7 +58,7 @@ export default function App() {
 
   if (showResults) {
     const score = flashcards.filter((card, i) =>
-      checkAnswer(answers[i] || "", card.question)
+      checkAnswer(answers[i] || "", card.answer)
     ).length;
 
     return (
@@ -101,9 +75,9 @@ export default function App() {
 
         <div className="answer-key">
           {flashcards.map((card, i) => {
-            const correct = checkAnswer(answers[i] || "", card.question);
-            const correctAnswer = expandExpression(card.question);
-            const userAnswer = expandExpression(answers[i] || "");
+            const correct = checkAnswer(answers[i] || "", card.answer);
+            const correctAnswer = card.answer;
+            const userAnswer = answers[i] || "(none)";
             return (
               <motion.div
                 key={i}
@@ -114,7 +88,7 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {userAnswer || "(none)"}{" "}
+                  Your Answer: {userAnswer}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
