@@ -12,18 +12,27 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize user input (remove spaces, lowercase)
+  // Normalize user input (lowercase, remove spaces)
   const normalize = (str) =>
     str.replace(/\s+/g, "").toLowerCase();
 
-  // Compare algebraically using math.js
+  // Format expression for display
+  const formatExpr = (exprStr) => {
+    try {
+      return simplify(parse(normalize(exprStr))).toString();
+    } catch {
+      return exprStr || "(none)";
+    }
+  };
+
+  // Check correctness algebraically
   const checkAnswer = (userInput, correctAnswer) => {
     try {
       const userExpr = simplify(parse(normalize(userInput)));
       const correctExpr = simplify(parse(normalize(correctAnswer)));
       return simplify(userExpr.subtract(correctExpr)).equals(0);
     } catch {
-      return false; // invalid input
+      return false;
     }
   };
 
@@ -93,12 +102,12 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {answers[i] || "(none)"}{" "}
+                  Your Answer: {formatExpr(answers[i])}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  Correct Answer: {card.answer}
+                  Correct Answer: {formatExpr(card.answer)}
                 </p>
               </motion.div>
             );
@@ -170,4 +179,7 @@ export default function App() {
     </div>
   );
 }
+
+
+
 
