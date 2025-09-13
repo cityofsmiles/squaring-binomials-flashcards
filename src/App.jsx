@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { parse, simplify } from "mathjs";
@@ -23,10 +22,13 @@ export default function App() {
         .replace(/\^/g, "**");
 
       const expr = parse(normalized);
-      const expanded = simplify(expr, ["expand"]);
+
+      // Expand polynomial fully
+      const expanded = simplify(expr, {}, { exactFractions: false }).toString();
+
+      // Cleanup formatting: remove *, normalize spacing
       return expanded
-        .toString()
-        .replace(/\*/g, "") // remove * signs
+        .replace(/\*/g, "")
         .replace(/\s*\+\s*/g, " + ")
         .replace(/\s*-\s*/g, " - ")
         .replace(/\s+/g, " ")
