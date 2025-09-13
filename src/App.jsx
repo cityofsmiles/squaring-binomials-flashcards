@@ -16,7 +16,13 @@ export default function App() {
   const expandExpression = (exprStr) => {
     try {
       if (!exprStr || exprStr.trim() === "") return null;
-      const expr = parse(exprStr.replace(/\s+/g, "").toLowerCase());
+      // Normalize: lowercase, replace ^ with ** for mathjs
+      const normalized = exprStr
+        .replace(/\s+/g, "")
+        .toLowerCase()
+        .replace(/\^/g, "**");
+
+      const expr = parse(normalized);
       const expanded = simplify(expr, ["expand"]);
       return expanded
         .toString()
