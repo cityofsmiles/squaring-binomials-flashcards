@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { simplify, parse } from "mathjs";
+import { parse, simplify } from "mathjs";
 import "./flashcards.css";
 
 export default function App() {
@@ -12,23 +12,21 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize user input (remove spaces, lowercase, etc.)
-  const normalizeInput = (str) => str.replace(/\s+/g, "").toLowerCase();
-
   // Expand + simplify into canonical form for comparison
   const expandExpression = (exprStr) => {
     try {
-      const expr = parse(normalizeInput(exprStr));
+      if (!exprStr || exprStr.trim() === "") return null;
+      const expr = parse(exprStr.replace(/\s+/g, "").toLowerCase());
       const expanded = simplify(expr, ["expand"]);
-      // Format nicely: remove "*" and enforce consistent spacing
       return expanded
         .toString()
-        .replace(/\*/g, "")
+        .replace(/\*/g, "") // remove * signs
         .replace(/\s*\+\s*/g, " + ")
         .replace(/\s*-\s*/g, " - ")
         .replace(/\s+/g, " ")
         .trim();
-    } catch {
+    } catch (err) {
+      console.error("Parse error:", exprStr, err);
       return null;
     }
   };
@@ -59,7 +57,7 @@ export default function App() {
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
 
-  // Compare canonical expanded forms
+  // Compare by expansion only
   const checkAnswer = (userInput, question) => {
     const correctExpanded = expandExpression(question);
     const userExpanded = expandExpression(userInput);
@@ -185,6 +183,5 @@ export default function App() {
     </div>
   );
 }
-
 
 
