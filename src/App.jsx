@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./flashcards.css";
@@ -11,14 +12,9 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize string: remove spaces, lowercase
-  const normalize = (str) =>
+  // Normalize input (remove spaces, lowercase)
+  const normalizeInput = (str) =>
     str.replace(/\s+/g, "").toLowerCase();
-
-  // Compare user input to stored answer key
-  const checkAnswer = (userInput, correctAnswer) => {
-    return normalize(userInput) === normalize(correctAnswer);
-  };
 
   // Load flashcards JSON
   const loadFlashcards = () => {
@@ -45,6 +41,13 @@ export default function App() {
 
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
+
+  // Compare user answer with correct answer from JSON
+  const checkAnswer = (userInput, correctAnswer) => {
+    const correct = normalizeInput(correctAnswer);
+    const user = normalizeInput(userInput);
+    return user !== "" && user === correct;
+  };
 
   const nextCard = () =>
     setCurrentIndex((prev) =>
@@ -77,7 +80,10 @@ export default function App() {
           {flashcards.map((card, i) => {
             const correct = checkAnswer(answers[i] || "", card.answer);
             const correctAnswer = card.answer;
-            const userAnswer = answers[i] || "(none)";
+            const userAnswer =
+              answers[i] && answers[i].trim() !== ""
+                ? answers[i]
+                : "(none)";
             return (
               <motion.div
                 key={i}
@@ -165,5 +171,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
