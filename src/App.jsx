@@ -1,8 +1,7 @@
-
+ 
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { parse, simplify } from "mathjs";
 import "./flashcards.css";
 
 export default function App() {
@@ -12,29 +11,9 @@ export default function App() {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Normalize user input (lowercase, remove spaces)
+  // Normalize strings: remove spaces, lowercase
   const normalize = (str) =>
-    str.replace(/\s+/g, "").toLowerCase();
-
-  // Format expression for display
-  const formatExpr = (exprStr) => {
-    try {
-      return simplify(parse(normalize(exprStr))).toString();
-    } catch {
-      return exprStr || "(none)";
-    }
-  };
-
-  // Check correctness algebraically
-  const checkAnswer = (userInput, correctAnswer) => {
-    try {
-      const userExpr = simplify(parse(normalize(userInput)));
-      const correctExpr = simplify(parse(normalize(correctAnswer)));
-      return simplify(userExpr.subtract(correctExpr)).equals(0);
-    } catch {
-      return false;
-    }
-  };
+    (str || "").replace(/\s+/g, "").toLowerCase();
 
   // Load flashcards JSON
   const loadFlashcards = () => {
@@ -61,6 +40,10 @@ export default function App() {
 
   const handleAnswer = (value) =>
     setAnswers({ ...answers, [currentIndex]: value });
+
+  // Simple string comparison
+  const checkAnswer = (userInput, correctAnswer) =>
+    normalize(userInput) === normalize(correctAnswer);
 
   const nextCard = () =>
     setCurrentIndex((prev) =>
@@ -102,12 +85,12 @@ export default function App() {
               >
                 <p>
                   <strong>Q{i + 1}:</strong> {card.question} <br />
-                  Your Answer: {formatExpr(answers[i])}{" "}
+                  Your Answer: {answers[i] || "(none)"}{" "}
                   <span className={correct ? "correct" : "incorrect"}>
                     {correct ? "✓" : "✗"}
                   </span>
                   <br />
-                  Correct Answer: {formatExpr(card.answer)}
+                  Correct Answer: {card.answer}
                 </p>
               </motion.div>
             );
@@ -179,7 +162,5 @@ export default function App() {
     </div>
   );
 }
-
-
 
 
